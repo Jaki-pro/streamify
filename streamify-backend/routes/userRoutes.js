@@ -1,13 +1,12 @@
-const express = require('express');
-const authController = require('../controllers/authController');
+const express = require('express'); 
 
 const router = express.Router();
 
 // @route   POST /api/auth/register
 // @desc    Register a new user
 // @access  Public
-console.log("auth routes running");
-router.post('/auth/google', authController.googleSign);
+console.log("user routes");
+router.post('/user');
 
 // @route   POST /api/auth/login
 // @desc    Login a user
