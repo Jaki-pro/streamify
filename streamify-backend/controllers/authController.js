@@ -1,8 +1,8 @@
 const { OAuth2Client } = require("google-auth-library");
+const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 require('dotenv').config();
 const client_id = process.env.CLIENT_ID
-
 const client = new OAuth2Client(client_id);
 exports.googleSign = async (req, res) => {
   console.log("client id", client_id);
@@ -42,11 +42,22 @@ exports.googleSign = async (req, res) => {
     if (existingUser) {
        newUser=existingUser;
     }
-    else newUser = User.create(user);
-
-    res.status(200).json({
+    else await User.create(user);
+    // Generate JWT token
+    const accessToken = jwt.sign({ email, role: user.role}, process.env.JWT_ACCESS_SECRET);
+    //console.log('access token', accessToken);
+    // Set HTTP-only cookie
+     
+    // console.log("Set-Cookie header:", res.getHeaders()["set-cookie"]);
+    res.status(200).cookie("token", accessToken, {
+      httpOnly: true, 
+      secure: true,
+      sameSite: "none", 
+      maxAge: 3600000, 
+    }).json({
       message: "User authenticated",
       user: user,
+      accessToken: accessToken
     });
 
   } catch (error) {

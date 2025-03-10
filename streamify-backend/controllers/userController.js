@@ -1,30 +1,16 @@
-
- exports.singleUser = async (req, res) => { 
-    const { token } = req.body;
-    if (!token) {
-      return res.status(400).json({ message: "Token not provided" });
-    }
-    try {
-      // Verify Google ID Token
-      const ticket = await client.verifyIdToken({
-        idToken: token,
-        audience: client_id, // Correct audience check
-      });
-      const payload = ticket.getPayload();
-      const { sub, email, name, picture, aud } = payload; 
-      // Validate audience
-      if (aud !== client_id) {
-        return res.status(401).json({ message: "Token audience mismatch" });
-      }
-      console.log("Verified Google User:", { sub, email, name, picture });
-      // Respond with user info
-      res.status(200).json({
-        message: "User authenticated",
-        user: { id: sub, email, name, picture },
-      });
-  
-    } catch (error) {
-      console.error("Token verification failed:", error.message);
-      res.status(401).json({ message: "Invalid token", error: error.message });
-    }
-  };
+const jwt = require("jsonwebtoken");  
+const User = require("../models/User");
+exports.me = async  (req, res) => {
+  //console.log("access secret", process.env.JWT_ACCESS_SECRET);
+  const token = req?.headers?.authorization;
+  const accessToken = token?.split(" ")[1];
+ // console.log("token of cookie: ", accessToken);
+  try {
+    const user = jwt.verify(accessToken, process.env.JWT_ACCESS_SECRET);
+    
+    const myself = await User.findOne({email: user?.email});
+    res.status(200).json({ user: myself });
+  } catch (error) {
+    res.status(401).json({ message: "Invalid token" });
+  }
+};

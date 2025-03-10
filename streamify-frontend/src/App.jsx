@@ -1,22 +1,58 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { GoogleLogin } from "@react-oauth/google";
 import axios from 'axios';
+import { Outlet, useNavigate } from 'react-router-dom';
+import { FaVideo } from "react-icons/fa"; // Import the video icon
+import { FaPlus } from "react-icons/fa";
 
 const App = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [isOpenDropdown, setIsOpenDropdown] = useState(false);
   const [user, setUser] = useState(null);
+  const [localUser, setLocalUser] = useState(null);
   const dropdownRef = useRef(null);
+  const navigate = useNavigate();
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = JSON.parse(localStorage.getItem("userToken"));
+      console.log(token);
+      if (token) {
+
+        try {
+          const res = await axios.get("http://127.0.0.1:5000/api/user/me", {
+            headers: {
+              "Authorization": `Bearer ${token?.accessToken}`,
+            }
+          });
+          setUser(res.data.user);
+          console.log(res);
+        } catch (error) {
+          console.log("User not authenticated");
+        }
+      }
+      //console.log(user);
+    }
+    fetchUser();
+
+    // setLocalUser(storedUser);
+
+  }, []);
 
   const handleLoginSuccess = async (credentialResponse) => {
     const { credential } = credentialResponse;
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/google", { token: credential });
-      setUser(res.data.user);
+      const res = await axios.post("http://127.0.0.1:5000/api/auth/google", { token: credential });
+      setUser(res?.data?.user);
+      console.log(res);
+      const userToken = { accessToken: res?.data?.accessToken };
+      localStorage.setItem("userToken", JSON.stringify(userToken));
+      setLocalUser(res?.data?.user)
+
     } catch (error) {
       console.error("Axios Error:", error.response?.status, error.response?.data);
     }
+
   };
 
   useEffect(() => {
@@ -32,6 +68,11 @@ const App = () => {
     };
   }, []);
 
+  const handleLogout = () => {
+    localStorage.removeItem("userToken"); // Removes only the "user" key
+    setLocalUser(null);
+    setUser(null);
+  }
   const handleLoginError = () => {
     console.error("Login Failed");
   };
@@ -61,7 +102,7 @@ const App = () => {
           </button>
           <div className="text-xl font-bold">Streamify</div>
         </div>
-        <div className="md:w-1/3 w-full mt-4 sm:mt-0 sm:ml-4 relative">
+        <div className="md:w-1/3 sm:w-2/3 w-full mt-4 sm:mt-0 sm:ml-4 relative">
           <input
             type="text"
             placeholder="Search videos..."
@@ -95,15 +136,40 @@ const App = () => {
             />
           </div>
         ) : (
-          <div className="relative" ref={dropdownRef}>
+          <div className="relative flex items-center gap-4" ref={dropdownRef}>
+            {/* Upload Video Icon */}
+            <div className="relative group">
+              <FaVideo
+                className="w-12 h-8 p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 cursor-pointer shadow-lg hover:shadow-xl transform hover:scale-105"
+                onClick={() => navigate('/go-live')}
+              />
+              {/* Tooltip Below */}
+              <span className="absolute top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-gray-800 text-white text-sm px-1 py-1 rounded-md transition-opacity duration-200 shadow-lg min-w-[70px] text-center">
+                Go Live
+              </span>
+            </div>
+            <div className="relative group">
+              <FaPlus
+                className="w-12 h-8 p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 cursor-pointer shadow-lg hover:shadow-xl transform hover:scale-105"
+                onClick={() => navigate('/upload-video')}
+              />
+              {/* Tooltip Below */}
+              <span className="absolute top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 bg-gray-800 text-white text-sm px-1 py-1 rounded-md transition-opacity duration-200 shadow-lg min-w-[100px] text-center">
+                Upload Video
+              </span>
+            </div>
+
+            {/* User Profile Image */}
             <img
               src={user.profilePicture}
               alt="User Profile"
               className="w-10 h-10 rounded-full border-2 border-gray-700 hover:border-blue-500 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md"
               onClick={() => setIsOpenDropdown(!isOpenDropdown)}
             />
+
+            {/* Dropdown Menu */}
             {isOpenDropdown && (
-              <div className="absolute right-0 mt-2 w-56 bg-gray-800 border border-gray-700 rounded-lg shadow-lg overflow-hidden animate-fadeIn">
+              <div className="absolute right-0 top-12 mt-2 w-56 bg-gray-800 border border-gray-700 rounded-lg shadow-lg overflow-hidden animate-fadeIn">
                 <ul className="py-1">
                   <li className="px-4 py-2 text-gray-300 hover:bg-gray-700 cursor-pointer transition-colors duration-200">
                     Profile
@@ -111,7 +177,10 @@ const App = () => {
                   <li className="px-4 py-2 text-gray-300 hover:bg-gray-700 cursor-pointer transition-colors duration-200">
                     Settings
                   </li>
-                  <li className="px-4 py-2 text-red-400 hover:bg-red-500 hover:text-white cursor-pointer transition-colors duration-200">
+                  <li
+                    onClick={handleLogout}
+                    className="px-4 py-2 text-red-400 hover:bg-red-500 hover:text-white cursor-pointer transition-colors duration-200"
+                  >
                     Logout
                   </li>
                 </ul>
@@ -164,7 +233,7 @@ const App = () => {
           </button>
           <ul className="space-y-2">
             <li>
-              <a href="#" className="flex items-center p-2 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors duration-200">
+              <a href="/" className="flex items-center p-2 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors duration-200">
                 {isSidebarCollapsed ? (
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -260,11 +329,11 @@ const App = () => {
             className="fixed inset-0 bg-black bg-opacity-50 lg:hidden z-30"
           ></div>
         )}
-
-        <main className={`flex-1 p-6 transition-all duration-300 `}>
+        <Outlet />
+        {/* <main className={`flex-1 p-6 transition-all duration-300 `}>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((video) => (
-              <div key={video} className="shadow-xl shadow-gray-500/40 bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <div  key={video} className="shadow-xl shadow-gray-500/40 bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
                 <img
                   src="https://via.placeholder.com/400x225"
                   alt="Video Thumbnail"
@@ -278,7 +347,7 @@ const App = () => {
               </div>
             ))}
           </div>
-        </main>
+        </main> */}
       </div>
     </div>
   );
