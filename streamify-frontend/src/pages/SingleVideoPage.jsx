@@ -98,7 +98,7 @@ const SingleVideoPage = ({ videoId }) => {
               muted
               controls
               className="w-full h-full"
-              src="http://localhost:5000/videos/video-1741459393229.mp4"
+              src="http://localhost:5000/videos/video-1741980370674.mp4"
               poster="https://res.cloudinary.com/cloudinary-marketing/images/c_fill,w_1324/f_auto,q_auto/v1647045700/36_video_thumbnails/36_video_thumbnails-jpg?_i=AA"
             >
               Your browser does not support the video tag.

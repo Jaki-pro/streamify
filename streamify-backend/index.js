@@ -44,7 +44,7 @@ app.use('/api/videos', videoRoutes); //
 app.get("/", (req, res) => {
   res.send("Google Sign-In Backend Running ✅");
 });
-app.use("/videos", express.static(path.join(__dirname, "uploads/videos")));
+app.use("/videos", express.static(path.join(__dirname, "input")));
 // Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

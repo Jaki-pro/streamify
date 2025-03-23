@@ -4,8 +4,7 @@ const router = express.Router();
 
 // @route   POST /api/auth/register
 // @desc    Register a new user
-// @access  Public
-console.log("upload routes");
+// @access  Public 
 router.post('/upload', videoController.upload);
 
 // @route   POST /api/auth/login

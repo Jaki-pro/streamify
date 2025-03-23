@@ -5,8 +5,7 @@ const router = express.Router();
 
 // @route   POST /api/auth/register
 // @desc    Register a new user
-// @access  Public
-console.log("auth routes running");
+// @access  Public 
 router.post('/google', authController.googleSign);
 
 // @route   POST /api/auth/login
